@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "lib.h"
 
-char *resize(char *b, int size);
+char *resize(char **b, int size);
 
 /**
  * _getline - Reads input from the user
@@ -20,9 +20,10 @@ char *_getline()
 	int limit = sizeof(char) * max;
 	int size = limit;
 
-	b = malloc(size * sizeof(char));
+	b = malloc((size * sizeof(char)) + 1);
 	if (b == NULL)
 		return (NULL);
+	b = _memset(b, '\0', 0, size + 1);
 
 	while ((n = read(0, (b + (size - limit)), limit)) > -1)
 	{
@@ -31,7 +32,7 @@ char *_getline()
 		{
 			ex++;
 			size = ex * limit;
-			b = resize(b, size);
+			b = resize(&b, size);
 			if (b == NULL)
 			{
 				return (NULL);
@@ -60,19 +61,21 @@ char *_getline()
  *
  * Return: pointer to the newly allocated array
  */
-char *resize(char *b, int size)
+char *resize(char **b, int size)
 {
-	char *temp = malloc(size * sizeof(char));
+	char *temp = NULL;
 
+	temp = malloc((size * sizeof(char)) + 1);
 	if (temp == NULL)
 	{
-		free(b);
+		free(*b);
 		return (NULL);
 	}
+	temp = _memset(temp, '\0', 0, size + 1);
 
-	_strcpy(temp, b);
-	free(b);
-	b = temp;
+	_strcpy(temp, *b);
+	free(*b);
+	*b = temp;
 
-	return (b);
+	return (*b);
 }

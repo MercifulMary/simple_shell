@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "lib.h"
 
+void clear_array(char ***arr, int size);
+
 /**
  * _print_env - print environment variables
  * @env: the environment variable address
@@ -35,33 +37,43 @@ int _set_env(char *var, char ***env)
 	int count;
 	char **arr;
 
-	arr = malloc(sizeof(char *) * 3);
-	if (arr == NULL)
-		return (-1);
-
-	count = _strtok(&arr, var, "=");
-	if (count != 2)
-		return (-1);
-	name = _strcpy(name, arr[0]);
 	if (*env != NULL)
 	{
+		arr = malloc(sizeof(char *) * 3);
+		if (arr == NULL)
+			return (-1);
+
+		count = _strtok(&arr, var, "=");
+		if (count != 2)
+		{
+			free_array(&arr, 0);
+			return (-1);
+		}
+		name = _strcpy(name, arr[0]);
+		clear_array(&arr, 3);
+
 		while (((*env)[i]) != NULL)
 		{
 			count = _strtok(&arr, (*env)[i], "=");
 			if (count == 2 && _strcmp(arr[0], name) == 0)
 			{
-				(*env)[i] = var;
+				(*env)[i] = _strcpy((*env)[i], var);
+				free(name);
+				free_array(&arr, 0);
 				return (1);
+			}
+			else
+			{
+				free_array(&arr, 0);
+				arr = NULL;
 			}
 			i++;
 		}
 
-		(*env)[i] = var;
+		(*env)[i] = _strcpy((*env)[i], var);
 		(*env)[i + 1] = NULL;
 
 		free(name);
-		free_array(&arr, 3);
-
 		return (1);
 	}
 	return (0);
@@ -81,12 +93,12 @@ int _unset_env(char *name, char ***env)
 	int count;
 	char **arr;
 
-	arr = malloc(sizeof(char *) * 3);
-	if (arr == NULL)
-		return (-1);
-
 	if (*env != NULL)
 	{
+		arr = malloc(sizeof(char *) * 3);
+		if (arr == NULL)
+			return (-1);
+
 		while (((*env)[i]) != NULL)
 		{
 			count = _strtok(&arr, (*env)[i], "=");
@@ -94,18 +106,40 @@ int _unset_env(char *name, char ***env)
 			{
 				pos = i;
 			}
+			free_array(&arr, 0);
+			arr = NULL;
 			i++;
 		}
 
 		if (pos == -1)
+		{
+			free_array(&arr, 0);
 			return (-1);
+		}
 
 		(*env)[pos] = (*env)[i - 1];
 		(*env)[i - 1] = NULL;
 
-		free(name);
-		free_array(&arr, 3);
+		free_array(&arr, 0);
 		return (1);
 	}
 	return (0);
+}
+
+/**
+ * clear_array - function to clear array content
+ * @arr: the address of the array
+ * @size: the size to clear up to
+ */
+void clear_array(char ***arr, int size)
+{
+	int i = 0;
+
+	if (*arr != NULL)
+	{
+		for (i = 0; i < size; i++)
+		{
+			free((*(arr))[i]);
+		}
+	}
 }

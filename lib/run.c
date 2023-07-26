@@ -5,22 +5,27 @@
 #include <sys/stat.h>
 #include "lib.h"
 
-int exec_process(char *, char **cmd);
-int exec_custom_commands(char **cmd, char ***env);
+int exec_process(char *, char ***addr, char **cmd);
+int manage_env(char **, char ***);
+void exec_custom_commands(char ***, char **);
+void finalize(char ***, int, int);
+
 
 /**
  * run - function to executes a command
+ * @addr: the address of the command list array
  * @cmd: the command represented as an array
  * @env: the address of the environment variables
  *
  * Return: 1
  */
-int run(char **cmd, char ***env)
+int run(char ***addr, char **cmd, char ***env)
 {
+	int res = 1;
 	struct stat st;
-	int status, res;
+	int status;
 	pid_t cid;
-	char *path = "/bin/";
+	char *path = _strcpy(NULL, "/bin/");
 
 	path = _strcat(path, cmd[0]);
 	if (path == NULL)
@@ -28,27 +33,27 @@ int run(char **cmd, char ***env)
 		return (-1);
 	}
 
-	if (_strcmp(path, "/bin/env") == 0 ||
-		_strcmp(path, "/bin/printenv") == 0)
-	{
-		_print_env(env);
-	}
-	else
+	res = manage_env(cmd, env);
+	if (res == 0)
 	{
 		cid = fork();
 		if (cid == -1)
 		{
 			_puts(2, "Error creating process\n");
+			free(path);
 			return (-1);
 		}
 		else if (cid == 0)
 		{
 			if (stat(path, &st) != 0)
 			{
-				return (exec_custom_commands(cmd, env));
+				free(path);
+				exec_custom_commands(addr, cmd);
 			}
-			res = exec_process(path, cmd);
-			return (res);
+			else
+			{
+				res = exec_process(path, addr, cmd);
+			}
 		}
 		else
 		{
@@ -56,36 +61,62 @@ int run(char **cmd, char ***env)
 		}
 	}
 	free(path);
-	return (1);
+	return (res);
 }
 
 /**
  * exec_process - function to execute a process
  * @path: the bin path
+ * @addr: the addres of the command array
  * @cmd: command array
  *
  * Return: an integer
  */
-int exec_process(char *path, char **cmd)
+int exec_process(char *path, char ***addr, char **cmd)
 {
 	if (execve(path, cmd, NULL) == -1)
 	{
-		exit(EXIT_FAILURE);
-		return (-1);
+		free(path);
+		finalize(addr, EXIT_FAILURE, 1);
 	}
+	free(path);
 	return (1);
 }
 
 /**
  * exec_custom_commands - function to exectue commands outside stat
+ * @addr: the address of the comand list
+ * @cmd: the command list
+ *
+ */
+void exec_custom_commands(char ***addr, char **cmd)
+{
+	if (execve(cmd[0], cmd, NULL) == -1)
+	{
+		_puts(2, "bash: ");
+		_puts(2, cmd[0]);
+		_puts(2, ": command not found\n");
+		finalize(addr, EXIT_FAILURE, 1);
+	}
+	finalize(addr, EXIT_SUCCESS, 1);
+
+}
+
+/**
+ * manage_env - function to manage environment variables
  * @cmd: the command list
  * @env: the address of the environment variables
  *
  * Return: 1 if successful
  */
-int exec_custom_commands(char **cmd, char ***env)
+int manage_env(char **cmd, char ***env)
 {
-	if (_strcmp(cmd[0], "setenv") == 0)
+	if (_strcmp(cmd[0], "printenv") == 0 || _strcmp(cmd[0], "env") == 0)
+	{
+		_print_env(env);
+		return (1);
+	}
+	else if (_strcmp(cmd[0], "setenv") == 0)
 	{
 		char *var = NULL;
 
@@ -95,7 +126,8 @@ int exec_custom_commands(char **cmd, char ***env)
 			_puts(2, "Error:Usage: setenv [name] [value]\n");
 		}
 
-		var = _strcat(cmd[1], "=");
+		var = _strcpy(NULL, cmd[1]);
+		var = _strcat(var, "=");
 		if (var == NULL)
 			return (-1);
 
@@ -103,24 +135,35 @@ int exec_custom_commands(char **cmd, char ***env)
 		if (var == NULL)
 			return (-1);
 
-		return (_set_env(var, env));
+		_set_env(var, env);
+		free(var);
+		return (1);
 	}
 	else if (_strcmp(cmd[0], "unsetenv") == 0)
 	{
 		if (cmd[1] == NULL || cmd[1][0] == '\0')
-			_puts(2, "Error:Usage: unset [name]\n");
+			_puts(2, "Error:Usage: unsetenv [name]\n");
 
-		return (_unset_env(cmd[1], env));
+		_unset_env(cmd[1], env);
+		return (1);
 	}
 	else
 	{
-		if (execve(cmd[0], cmd, NULL) == -1)
-		{
-			_puts(2, "bash: ");
-			_puts(2, cmd[0]);
-			_puts(2, ": command not found\n");
-			return (-1);
-		}
-		return (1);
+		return (0);
+	}
+}
+
+/**
+ * finalize - function to free the address of an array and end process
+ * @addr: the address of the array
+ * @code: the exit status code
+ * @end_process: indicates if the process should be terminated
+ */
+void finalize(char ***addr, int code, int end_process)
+{
+	free_array(addr, 0);
+	if (end_process)
+	{
+		exit(code);
 	}
 }

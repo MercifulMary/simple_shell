@@ -12,7 +12,7 @@
 char *_strcpy(char *dest, char *src)
 {
 	unsigned int i = 0;
-	int len = 0;
+	unsigned int len = 0;
 
 	if (dest == NULL && src == NULL)
 	{
@@ -32,6 +32,7 @@ char *_strcpy(char *dest, char *src)
 			free(dest);
 			return (NULL);
 		}
+		dest = _memset(dest, '\0', 0, len + 1);
 	}
 
 	while (*(src + i) != '\0')

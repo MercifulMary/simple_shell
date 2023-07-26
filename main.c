@@ -8,6 +8,7 @@
 #include "lib/strcpy.c"
 #include "lib/strtok.c"
 #include "lib/strcat.c"
+#include "lib/memset.c"
 #include "lib/run_commands.c"
 #include "lib/append_path.c"
 #include "lib/run.c"
@@ -200,7 +201,7 @@ int exec_run_commands(char ***clist, char ***env)
 			return (0);
 		}
 
-		run(*clist, env);
+		run(clist, *clist, env);
 	}
 
 	return (1);

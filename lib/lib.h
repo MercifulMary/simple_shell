@@ -9,7 +9,7 @@ char *_strcpy(char *dest, char *src);
 long _strtok(char ***arr, char *line, char *delim);
 char *_strcat(char *s1, char *s2);
 int run_commands(char ***, long, char ***);
-int run(char **cmd, char ***);
+int run(char ***addr, char **cmd, char ***);
 void free_array(char ***arr, int size);
 int append_path(char ***, long);
 int array_copy(char ***dest, char ***src, long size, int start, int end);
@@ -20,5 +20,6 @@ int _unset_env(char *var, char ***);
 int _puts(int, char *);
 int _putchar(int, char);
 void print_commands(char **clist, long csize);
+char *_memset(char *s, char c, unsigned int start, unsigned int n);
 
 #endif

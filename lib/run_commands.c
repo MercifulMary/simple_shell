@@ -16,5 +16,5 @@ int run_commands(char ***clist, long csize, char ***env)
 		return (-1);
 	}
 
-	return (run(*clist, env));
+	return (run(clist, *clist, env));
 }
